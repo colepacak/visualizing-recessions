@@ -1,11 +1,6 @@
 import pandas as pd
 import numpy as np
 
-# todo: remove any recession starts that are actually part of a previously started recession.
-# todo: add recession bottom.
-# todo: add counts for initial consecutive decreases.
-# todo: remove items from next_gdps and next_gdps_diffs that are outside of recession range.
-
 gdp = pd.read_excel('gdplev.xls', header=None, skiprows=list(np.arange(0,8)), usecols=[4,6], names=['quarter', 'gdp'])
 
 # Don't bother processing rows that don't have enough subsequent data to identify a recession.
