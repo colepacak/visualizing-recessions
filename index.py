@@ -19,7 +19,7 @@ def get_next_gdps_diffs(x):
     if determine_should_process(x):
         return None
     nexts = x['next_gdps']
-    return nexts[1:] - nexts[:len(nexts) - 1]
+    return np.around(nexts[1:] - nexts[:len(nexts) - 1], decimals=2)
 
 gdp['next_gdps_diffs'] = gdp.apply(get_next_gdps_diffs, axis=1)
 
@@ -38,7 +38,7 @@ def set_recession_end_quarter(x):
         for i in range(1, len(x['next_gdps_diffs'])):
             if (x['next_gdps_diffs'][i - 1] > 0) & (x['next_gdps_diffs'][i] > 0):
                 recession_end_quarter = gdp.loc[x.name + i + 1, 'quarter']
-                break;
+                break
     return recession_end_quarter
 
 gdp['recession_end_quarter'] = gdp.apply(set_recession_end_quarter, axis=1)
@@ -51,6 +51,17 @@ def get_recession_end_value(x):
 
 gdp['recession_end_value'] = gdp.apply(get_recession_end_value, axis=1)
 
-print('Num recession starts:', len(gdp[gdp['is_recession_start'] == True]))
-print('Num recession ends:', len(gdp[gdp['recession_end_quarter'].notnull()]))
-print(gdp[gdp['is_recession_start'] == True])
+# Remove any recession starts that are actually part of a previously started recession.
+def remove_false_recession_starts(df):
+    for i in df[df['is_recession_start'] == True].index:
+        x = df.loc[i]
+
+        recession_end_index = gdp[gdp['quarter'] == x['recession_end_quarter']].index.values[0]
+        rows_between = gdp.loc[x.name + 1:recession_end_index]
+        gdp.loc[rows_between.index.values, 'is_recession_start'] = False
+
+remove_false_recession_starts(gdp)
+
+recessions = gdp[gdp['is_recession_start'] == True].copy().drop('is_recession_start', axis=1)
+
+print(recessions)
