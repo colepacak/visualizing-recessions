@@ -30,15 +30,25 @@ def set_is_recession_start(x):
 
 gdp['is_recession_start'] = gdp.apply(set_is_recession_start, axis=1)
 
-def set_recession_end_quarter(x):
+def set_recession_end_quarter_rel_index(x):
     if determine_should_process(x):
         return None
-    recession_end_quarter = None
+    recession_end_quarter_rel_index = None
     if x['is_recession_start'] == True:
         for i in range(1, len(x['next_gdps_diffs'])):
             if (x['next_gdps_diffs'][i - 1] > 0) & (x['next_gdps_diffs'][i] > 0):
-                recession_end_quarter = gdp.loc[x.name + i + 1, 'quarter']
+                recession_end_quarter_rel_index = i + 1
                 break
+    return recession_end_quarter_rel_index
+
+gdp['recession_end_quarter_rel_index'] = gdp.apply(set_recession_end_quarter_rel_index, axis=1)
+
+def set_recession_end_quarter(x):
+    recession_end_quarter = None
+
+    if x['is_recession_start'] == True:
+        recession_end_quarter = gdp.loc[x.name + x['recession_end_quarter_rel_index'], 'quarter']
+
     return recession_end_quarter
 
 gdp['recession_end_quarter'] = gdp.apply(set_recession_end_quarter, axis=1)
@@ -63,5 +73,16 @@ def remove_false_recession_starts(df):
 remove_false_recession_starts(gdp)
 
 recessions = gdp[gdp['is_recession_start'] == True].copy().drop('is_recession_start', axis=1)
+recessions['recession_end_quarter_rel_index'] = recessions['recession_end_quarter_rel_index'].apply(np.int64)
+
+def remove_out_of_range_next_gdps(x):
+    return x['next_gdps'][:x['recession_end_quarter_rel_index'] + 1]
+
+recessions['next_gdps'] = recessions.apply(remove_out_of_range_next_gdps, axis=1)
+
+def remove_out_of_range_next_gdps_diffs(x):
+    return x['next_gdps_diffs'][:x['recession_end_quarter_rel_index']]
+
+recessions['next_gdps_diffs'] = recessions.apply(remove_out_of_range_next_gdps_diffs, axis=1)
 
 print(recessions)
