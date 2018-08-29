@@ -7,26 +7,26 @@ gdp = pd.read_excel('gdplev.xls', header=None, skiprows=list(np.arange(0,8)), us
 def determine_should_process(x):
     return x.name >= len(gdp) - 4
 
-def get_next_gdps(x, n):
+def get_gdp_collection(x, n):
     if determine_should_process(x):
         return None
     index = x.name
     return gdp.loc[index:index + n, 'gdp'].values
 
-gdp['next_gdps'] = gdp.apply(get_next_gdps, args=(9,), axis=1)
+gdp['gdp_collection'] = gdp.apply(get_gdp_collection, args=(9,), axis=1)
 
-def get_next_gdps_diffs(x):
+def get_gdp_collection_diffs(x):
     if determine_should_process(x):
         return None
-    nexts = x['next_gdps']
-    return np.around(nexts[1:] - nexts[:len(nexts) - 1], decimals=2)
+    collection = x['gdp_collection']
+    return np.around(collection[1:] - collection[:len(collection) - 1], decimals=2)
 
-gdp['next_gdps_diffs'] = gdp.apply(get_next_gdps_diffs, axis=1)
+gdp['gdp_collection_diffs'] = gdp.apply(get_gdp_collection_diffs, axis=1)
 
 def set_is_recession_start(x):
     if determine_should_process(x):
         return None
-    return (x['next_gdps_diffs'][0] < 0) & (x['next_gdps_diffs'][1] < 0)
+    return (x['gdp_collection_diffs'][0] < 0) & (x['gdp_collection_diffs'][1] < 0)
 
 gdp['is_recession_start'] = gdp.apply(set_is_recession_start, axis=1)
 
@@ -35,8 +35,8 @@ def set_recession_end_quarter_rel_index(x):
         return None
     recession_end_quarter_rel_index = None
     if x['is_recession_start'] == True:
-        for i in range(1, len(x['next_gdps_diffs'])):
-            if (x['next_gdps_diffs'][i - 1] > 0) & (x['next_gdps_diffs'][i] > 0):
+        for i in range(1, len(x['gdp_collection_diffs'])):
+            if (x['gdp_collection_diffs'][i - 1] > 0) & (x['gdp_collection_diffs'][i] > 0):
                 recession_end_quarter_rel_index = i + 1
                 break
     return recession_end_quarter_rel_index
@@ -53,13 +53,13 @@ def set_recession_end_quarter(x):
 
 gdp['recession_end_quarter'] = gdp.apply(set_recession_end_quarter, axis=1)
 
-def get_recession_end_value(x):
-    recession_end_value = None
+def get_recession_end_gdp(x):
+    recession_end_gdp = None
     if (x['is_recession_start'] == True):
-        recession_end_value = gdp[gdp['quarter'] == x['recession_end_quarter']]['gdp'].item()
-    return recession_end_value
+        recession_end_gdp = gdp[gdp['quarter'] == x['recession_end_quarter']]['gdp'].item()
+    return recession_end_gdp
 
-gdp['recession_end_value'] = gdp.apply(get_recession_end_value, axis=1)
+gdp['recession_end_gdp'] = gdp.apply(get_recession_end_gdp, axis=1)
 
 # Remove any recession starts that are actually part of a previously started recession.
 def remove_false_recession_starts(df):
@@ -73,16 +73,44 @@ def remove_false_recession_starts(df):
 remove_false_recession_starts(gdp)
 
 recessions = gdp[gdp['is_recession_start'] == True].copy().drop('is_recession_start', axis=1)
-recessions['recession_end_quarter_rel_index'] = recessions['recession_end_quarter_rel_index'].apply(np.int64)
+# Pare down column names.
+recessions.rename(columns={
+    'recession_end_quarter_rel_index': 'end_quarter_rel_index',
+    'recession_end_quarter': 'end_quarter',
+    'recession_end_gdp': 'end_gdp'
+}, inplace=True)
+# Make the relative index an integer for ease of use.
+recessions['end_quarter_rel_index'] = recessions['end_quarter_rel_index'].apply(np.int64)
 
-def remove_out_of_range_next_gdps(x):
-    return x['next_gdps'][:x['recession_end_quarter_rel_index'] + 1]
+def remove_out_of_range_gdps(x):
+    return x['gdp_collection'][:x['end_quarter_rel_index'] + 1]
 
-recessions['next_gdps'] = recessions.apply(remove_out_of_range_next_gdps, axis=1)
+recessions['gdp_collection'] = recessions.apply(remove_out_of_range_gdps, axis=1)
 
-def remove_out_of_range_next_gdps_diffs(x):
-    return x['next_gdps_diffs'][:x['recession_end_quarter_rel_index']]
+def remove_out_of_range_gdp_diffs(x):
+    return x['gdp_collection_diffs'][:x['end_quarter_rel_index']]
 
-recessions['next_gdps_diffs'] = recessions.apply(remove_out_of_range_next_gdps_diffs, axis=1)
+recessions['gdp_collection_diffs'] = recessions.apply(remove_out_of_range_gdp_diffs, axis=1)
 
-print(recessions)
+def get_bottom_gdp(x):
+    return x['gdp_collection'].min()
+
+recessions['bottom_gdp'] = recessions.apply(get_bottom_gdp, axis=1)
+
+recessions['num_quarters'] = recessions.apply(lambda x: len(x['gdp_collection']), axis=1)
+
+def get_initial_consecutive_decreases(x):
+    consecutive_decreases = 0
+    for i in range(0, len(x['gdp_collection_diffs'])):
+        if x['gdp_collection_diffs'][i] < 0:
+            consecutive_decreases += 1
+        else:
+            break;
+    return consecutive_decreases
+
+recessions['num_initial_consecutive_decreases'] = recessions.apply(get_initial_consecutive_decreases, axis=1)
+
+print(recessions[['quarter', 'end_quarter']])
+
+# Export to JSON
+# recessions.to_json('recessions.json', orient='records')
