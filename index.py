@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 gdp = pd.read_excel('gdplev.xls', header=None, skiprows=list(np.arange(0,8)), usecols=[4,6], names=['quarter', 'gdp'])
 
@@ -110,7 +111,23 @@ def get_initial_consecutive_decreases(x):
 
 recessions['num_initial_consecutive_decreases'] = recessions.apply(get_initial_consecutive_decreases, axis=1)
 
-print(recessions[['quarter', 'end_quarter']])
+recessions['start_to_bottom'] = recessions['gdp'] / recessions['bottom_gdp']
+recessions['bottom_to_end'] = recessions['bottom_gdp'] / recessions['end_gdp']
+
+# Normalize data by scaling over range.
+def normalize_column(df, column, feature_range=(0,1)):
+    scaler = MinMaxScaler(feature_range=feature_range)
+    values = df[[column]].values
+    scaler.fit(values)
+
+    return df.apply(lambda x: scaler.transform(x[column])[0][0], axis=1)
+
+recessions['num_quarters_norm'] = normalize_column(recessions, 'num_quarters', (1,10))
+recessions['start_to_bottom_norm'] = normalize_column(recessions, 'start_to_bottom', (1,10))
+recessions['bottom_to_end_norm'] = normalize_column(recessions, 'bottom_to_end', (1,10))
+recessions['num_initial_consecutive_decreases_norm'] = normalize_column(recessions, 'num_initial_consecutive_decreases', (1,5))
+
+# print(recessions[['num_initial_consecutive_decreases', 'num_initial_consecutive_decreases_norm', 'num_quarters', 'num_quarters_norm', 'start_to_bottom', 'start_to_bottom_norm', 'bottom_to_end', 'bottom_to_end_norm']])
 
 # Export to JSON
 # recessions.to_json('recessions.json', orient='records')
