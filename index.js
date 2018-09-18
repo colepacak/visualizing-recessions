@@ -25,8 +25,8 @@ camera.position.set(100,50,100);
 renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-renderer.setClearColor(0xffffff);
-// renderer.setClearColor(0x263238);
+// renderer.setClearColor(0xffffff);
+renderer.setClearColor(0x263238);
 
 document.body.appendChild(renderer.domElement);
 
@@ -57,19 +57,49 @@ function init() {
   fetchData()
     .then(function(resp) {
       data = resp;
-      addSpheresFromData(data, scene);
-      addGrids();
-      addAxisLabels();
+      animateGrid(60);
+      // addAxisLabels();
+      // addSpheresFromData(data, scene);
 
-      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(70,0,0), 'x');
-      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(0,70,0), 'y');
-      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,70), 'z');
+
 });
 
   render();
 }
 
-function animateAxis(start, end, axis, color = 0x0000ff, duration = 700) {
+function animateGrid(length) {
+  const axes = ['x', 'y', 'z'];
+  for (let i = 0; i < axes.length; i++) {
+    const currentAxis = axes[i];
+    animateGridGroup(currentAxis, axes, length);
+  }
+}
+
+function animateGridGroup(axis, axes, length) {
+  // Start with main axis.
+  let start = new THREE.Vector3(0,0,0);
+  let end = new THREE.Vector3(0,0,0);
+  end[axis] = length;
+  animateGridLine(start, end, axis);
+
+  // Next, do combinations of the main axis and one of the other possibilities.
+  for (let i = 0; i < axes.length; i++) {
+    const currentAxis = axes[i];
+    if (currentAxis === axis) { continue; }
+
+    const divisions = 4;
+    for (let i = 0; i < divisions; i++) {
+      let start = new THREE.Vector3(0,0,0);
+      start[currentAxis] = length * ((1 / divisions) * (i + 1));
+      let end = new THREE.Vector3(0,0,0);
+      end[currentAxis] = length * ((1 / divisions) * (i + 1));
+      end[axis] = length;
+      animateGridLine(start, end, axis);
+    }
+  }
+}
+
+function animateGridLine(start, end, axis, color = 0xe0e0e0, duration = 700) {
   var material = new THREE.LineBasicMaterial( { color: color } );
   var geometry = new THREE.Geometry();
   geometry.vertices.push(start);
@@ -85,29 +115,6 @@ function animateAxis(start, end, axis, color = 0x0000ff, duration = 700) {
   tween.start();
 }
 
-function addGrids() {
-  var size = 60;
-  var divisions = 5;
-  var color = 0xe0e0e0;
-
-  var gridXZ = new THREE.GridHelper(size, divisions, color, color);
-  gridXZ.position.set(size / 2, 0, size / 2);
-  gridXZ.name = 'gridXZ';
-  scene.add(gridXZ);
-
-  var gridYZ = new THREE.GridHelper(size, divisions, color, color);
-  gridYZ.position.set(0, size / 2, size / 2);
-  gridYZ.setRotationFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI / 2);
-  gridYZ.name = 'gridYZ';
-  scene.add(gridYZ);
-
-  var gridXY = new THREE.GridHelper(size, divisions, color, color);
-  gridXY.position.set(size / 2, size / 2, 0);
-  gridXY.setRotationFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI / 2);
-  gridXY.name = 'gridXY';
-  scene.add(gridXY);
-}
-
 function addSpheresFromData(data, scene) {
   const colors = {
       5: 0x29b6f6, // blue
@@ -119,7 +126,7 @@ function addSpheresFromData(data, scene) {
     const geometry = new THREE.SphereGeometry(d.num_initial_consecutive_decreases_norm, 32, 32);
     const material = new THREE.MeshLambertMaterial({ color: colors[d.num_quarters] });
     const sphere = new THREE.Mesh(geometry, material);
-    sphere.position.set(d.start_to_bottom_norm * 5, d.num_quarters_norm * 5, d.bottom_to_end_norm * 5);
+    sphere.position.set(d.start_to_bottom_norm * 5, d.num_quarters * 5, d.bottom_to_end_norm * 5);
     sphere.name = d.quarter;
     scene.add(sphere);
   });

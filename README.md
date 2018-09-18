@@ -8,6 +8,8 @@
 * ~~add grids~~
 * ~~add axes labels~~
 * ~~refactor to use % decrease and % increase~~
-* add tooltips on hover
+* ~~animate axes~~
+* animate axes tick values
 * add legend for sphere color and radius
-* add animation
+* animate spheres
+* add tooltips on hover
