@@ -111,8 +111,10 @@ def get_initial_consecutive_decreases(x):
 
 recessions['num_initial_consecutive_decreases'] = recessions.apply(get_initial_consecutive_decreases, axis=1)
 
-recessions['start_to_bottom'] = recessions['gdp'] / recessions['bottom_gdp']
-recessions['bottom_to_end'] = recessions['bottom_gdp'] / recessions['end_gdp']
+# Calculate % decrease from start to bottom.
+recessions['start_to_bottom'] = (recessions['gdp'] - recessions['bottom_gdp']) / recessions['gdp']
+# Calculate % increase from bottom to end.
+recessions['bottom_to_end'] = (recessions['end_gdp'] - recessions['bottom_gdp']) / recessions['bottom_gdp']
 
 # Normalize data by scaling over range.
 def normalize_column(df, column, feature_range=(0,1)):
@@ -127,7 +129,7 @@ recessions['start_to_bottom_norm'] = normalize_column(recessions, 'start_to_bott
 recessions['bottom_to_end_norm'] = normalize_column(recessions, 'bottom_to_end', (1,10))
 recessions['num_initial_consecutive_decreases_norm'] = normalize_column(recessions, 'num_initial_consecutive_decreases', (1,5))
 
-print(recessions[['bottom_to_end_norm', 'num_quarters_norm', 'num_quarters', 'start_to_bottom_norm']])
+print(recessions[['gdp', 'bottom_gdp', 'end_gdp', 'start_to_bottom', 'start_to_bottom_norm', 'bottom_to_end', 'bottom_to_end_norm', 'num_quarters_norm', 'num_quarters']])
 
 # Export to JSON
 # recessions.to_json('recessions.json', orient='records')

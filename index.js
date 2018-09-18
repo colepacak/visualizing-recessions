@@ -25,13 +25,23 @@ camera.position.set(100,50,100);
 renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-// renderer.setClearColor(0xffffff);
-renderer.setClearColor(0x263238);
+renderer.setClearColor(0xffffff);
+// renderer.setClearColor(0x263238);
 
 document.body.appendChild(renderer.domElement);
 
 // Controls
 controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+// var raycaster = new THREE.Raycaster();
+// var mouse = new THREE.Vector2(), INTERSECTED;
+
+// function onMouseMove( event ) {
+	// calculate mouse position in normalized device coordinates
+	// (-1 to +1) for both components
+	// mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	// mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+// }
 
 function fetchData() {
   return fetch('/recessions.json')
@@ -50,9 +60,29 @@ function init() {
       addSpheresFromData(data, scene);
       addGrids();
       addAxisLabels();
+
+      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(70,0,0), 'x');
+      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(0,70,0), 'y');
+      // animateAxis(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,70), 'z');
 });
 
   render();
+}
+
+function animateAxis(start, end, axis, color = 0x0000ff, duration = 700) {
+  var material = new THREE.LineBasicMaterial( { color: color } );
+  var geometry = new THREE.Geometry();
+  geometry.vertices.push(start);
+  geometry.vertices.push(end);
+  var line = new THREE.Line( geometry, material );
+  line.name = axis + '-axis'
+  line.scale[axis] = 0.0001;
+  scene.add(line);
+
+  const tween = new TWEEN.Tween(line.scale)
+    .to({ [axis]: 1 }, duration);
+
+  tween.start();
 }
 
 function addGrids() {
@@ -106,7 +136,7 @@ function addAxisLabels() {
       var size = 5;
 
       // x-axis
-      var message = "Start to Bottom";
+      var message = "   % Decrease\nStart to Bottom";
       var shapes = font.generateShapes(message, size);
       var geometry = new THREE.ShapeBufferGeometry(shapes);
       var xText = new THREE.Mesh(geometry, material);
@@ -131,7 +161,7 @@ function addAxisLabels() {
       scene.add(yText);
 
       // z-axis
-      var message = "Bottom to End";
+      var message = "  % Increase\nBottom to End";
       var shapes = font.generateShapes(message, size);
       var geometry = new THREE.ShapeBufferGeometry(shapes);
       var zText = new THREE.Mesh(geometry, material);
@@ -149,7 +179,30 @@ function addAxisLabels() {
 init();
 
 function render() {
+    TWEEN.update();
   requestAnimationFrame(render);
   controls.update();
+
+  // raycaster.setFromCamera( mouse, camera );
+
+  // calculate objects intersecting the picking ray
+	// var intersects = raycaster.intersectObjects( scene.children );
+
+  // if ( intersects.length > 0 ) {
+    // if ( INTERSECTED != intersects[ 0 ].object ) {
+      // INTERSECTED = intersects[ 0 ].object;
+      // console.log(INTERSECTED.name);
+    // }
+  // }
+
+	// for ( var i = 0; i < intersects.length; i++ ) {
+  //
+	// 	intersects[ i ].object.material.color.set( 0xff0000 );
+  //
+	// }
+
   renderer.render(scene, camera);
+
 }
+
+// window.addEventListener('mousemove', onMouseMove);

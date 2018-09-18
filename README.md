@@ -4,3 +4,10 @@
 * ~~pare down column names after creating recessions dataframe.~~
 * ~~add recession bottom.~~
 * ~~add counts for initial consecutive decreases.~~
+* ~~configure lights~~
+* ~~add grids~~
+* ~~add axes labels~~
+* ~~refactor to use % decrease and % increase~~
+* add tooltips on hover
+* add legend for sphere color and radius
+* add animation
