@@ -9,7 +9,13 @@
 * ~~add axes labels~~
 * ~~refactor to use % decrease and % increase~~
 * ~~animate axes~~
-* animate axes tick values
-* add legend for sphere color and radius
+* ~~animate axes tick values~~
+* ~~add tooltips on click~~
+* ~~fix ghost tooltips.~~
+* ~~prevent tooltips in background from being dragged.~~
+* ~~remove tooltips on click. add rotated plus sign.~~
+* ~~consider different color for tether than grid.~~
+
+* add legend for sphere color/radius
 * animate spheres
-* add tooltips on hover
+* fix y axis. mismatch with values.

@@ -129,7 +129,7 @@ recessions['start_to_bottom_norm'] = normalize_column(recessions, 'start_to_bott
 recessions['bottom_to_end_norm'] = normalize_column(recessions, 'bottom_to_end', (1,10))
 recessions['num_initial_consecutive_decreases_norm'] = normalize_column(recessions, 'num_initial_consecutive_decreases', (1,5))
 
-print(recessions[['gdp', 'bottom_gdp', 'end_gdp', 'start_to_bottom', 'start_to_bottom_norm', 'bottom_to_end', 'bottom_to_end_norm', 'num_quarters_norm', 'num_quarters']])
+print(recessions[['gdp', 'bottom_gdp', 'end_gdp', 'num_quarters', 'num_initial_consecutive_decreases', 'num_initial_consecutive_decreases_norm']])
 
 # Export to JSON
 # recessions.to_json('recessions.json', orient='records')
