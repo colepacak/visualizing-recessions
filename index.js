@@ -170,9 +170,8 @@ function addGridLine(start, end, axis, color = colorLabel, duration = 1000) {
 
     const tween = new TWEEN.Tween(line.scale)
       .to({ [axis]: 1 }, duration)
-      .onComplete(resolve);
-
-    tween.start();
+      .onComplete(resolve)
+      .start();
   });
 }
 
@@ -184,7 +183,7 @@ function addSpheresFromData(data, scene) {
     };
 
   data.forEach(d => {
-    const geometry = new THREE.SphereGeometry(d.num_initial_consecutive_decreases_norm * 2, 32, 32);
+    const geometry = new THREE.SphereGeometry(d.num_initial_consecutive_decreases_norm * 1.8, 32, 32);
     const material = new THREE.MeshLambertMaterial({ color: colors[d.num_initial_consecutive_decreases] });
     const sphere = new THREE.Mesh(geometry, material);
     sphere.position.set(d.start_to_bottom_norm * 6, d.num_quarters * 6, d.bottom_to_end_norm * 6);
@@ -194,7 +193,26 @@ function addSpheresFromData(data, scene) {
       type: 'sphere'
     };
     spheres.add(sphere);
+
+    animateRadius(sphere);
   });
+
+  function animateRadius(sphere) {
+    expand(sphere, contract);
+
+    function expand(sphere, contract) {
+      const tween = new TWEEN.Tween(sphere.scale)
+        .to({ x: 1.2, y: 1.2, z: 1.2 }, 200)
+        .onComplete(contract.bind(null, sphere))
+        .start();
+    }
+
+    function contract(sphere) {
+      const tween = new TWEEN.Tween(sphere.scale)
+        .to({ x: 1.1, y: 1.1, z: 1.1 }, 400)
+        .start();
+    }
+  }
 }
 
 function addLabels() {
@@ -344,13 +362,12 @@ function addLabels() {
     axisLabelMaterial
 
     const tweenAxisLabels = new TWEEN.Tween(axisLabelMaterial)
-      .to({ opacity: 1 }, 500);
+      .to({ opacity: 1 }, 500)
+      .start();
 
     const tweenTicks = new TWEEN.Tween(tickMaterial)
-      .to({ opacity: 1 }, 500);
-
-    tweenAxisLabels.start();
-    tweenTicks.start();
+      .to({ opacity: 1 }, 500)
+      .start();
   });
 }
 

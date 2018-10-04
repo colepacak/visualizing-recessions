@@ -15,7 +15,9 @@
 * ~~prevent tooltips in background from being dragged.~~
 * ~~remove tooltips on click. add rotated plus sign.~~
 * ~~consider different color for tether than grid.~~
-* fix mismatch between values and axes.
+* ~~fix mismatch between values and axes.~~
+* ~~animate spheres~~
 
 * add legend for sphere color/radius
-* animate spheres
+* increase click target of tooltip close.
+* cleanup: function order, browser test for es6 support.
