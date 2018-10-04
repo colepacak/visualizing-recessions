@@ -107,7 +107,7 @@ function init() {
           addLabels();
           addSpheresFromData(data, scene);
         });
-});
+    });
 
   render();
 }
@@ -187,7 +187,7 @@ function addSpheresFromData(data, scene) {
     const geometry = new THREE.SphereGeometry(d.num_initial_consecutive_decreases_norm * 2, 32, 32);
     const material = new THREE.MeshLambertMaterial({ color: colors[d.num_initial_consecutive_decreases] });
     const sphere = new THREE.Mesh(geometry, material);
-    sphere.position.set(d.start_to_bottom_norm * 5, d.num_quarters * 5, d.bottom_to_end_norm * 5);
+    sphere.position.set(d.start_to_bottom_norm * 6, d.num_quarters * 6, d.bottom_to_end_norm * 6);
     sphere.name = d.quarter;
     sphere.userData = {
       ...d,

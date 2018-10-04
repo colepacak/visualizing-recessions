@@ -15,7 +15,7 @@
 * ~~prevent tooltips in background from being dragged.~~
 * ~~remove tooltips on click. add rotated plus sign.~~
 * ~~consider different color for tether than grid.~~
+* fix mismatch between values and axes.
 
 * add legend for sphere color/radius
 * animate spheres
-* fix y axis. mismatch with values.
