@@ -1,4 +1,4 @@
-var scene, lights, camera, renderer, controls, grid, data, spheres, labels, raycaster, mouse, dragControls;
+var scene, lights, camera, renderer, controls, grid, data, spheres, labels, raycaster, mouse, dragControls, font;
 
 // Scene
 scene = new THREE.Scene();
@@ -21,7 +21,7 @@ lights.add(light3);
 scene.add(lights);
 
 // Camera
-camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
 camera.position.set(100,50,100);
 
 // Renderer
@@ -39,6 +39,8 @@ document.body.appendChild(renderer.domElement);
 
 // Controls
 controls = new THREE.OrbitControls(camera, renderer.domElement);
+// Ensure controls rotate around center of scene. Hardcoded to prevent pop.
+controls.target.set(30,15,30);
 
 // Spheres
 spheres = new THREE.Group();
@@ -54,38 +56,24 @@ scene.add(labels);
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
 
-document.addEventListener('mousedown', handleDocumentClick);
+init();
 
-function handleDocumentClick(e) {
-  mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-	mouse.y = - (e.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
-  var closeButtons = scene.children
-    .filter(c => c.name.includes('tooltip'))
-    .map(t => {
-      return t.children.filter(c => {
-        return c.name.includes('tooltip-close');
-      })[0];
+function init() {
+  Promise.all([
+    fetchData(),
+    loadFont()
+  ])
+    .then(function(resp) {
+      data = resp[0];
+      font = resp[1];
+      addGrid(60)
+        .then(function() {
+          addLabels();
+          addSpheresFromData(data, scene);
+        });
     });
 
-  var tooltips = scene.children.filter(c => c.name.includes('tooltip'));
-
-  // Register all objects as targets to prevent unwanted click-throughs.
-  raycaster.setFromCamera(mouse, camera);
-  var intersects = raycaster.intersectObjects(spheres.children.concat(closeButtons, tooltips));
-
-  if (intersects.length) {
-    switch(intersects[0].object.userData.type) {
-      case 'sphere':
-        addTooltip(intersects[0].object);
-        break;
-      case 'tooltip-close':
-        removeTooltip(intersects[0].object);
-        break;
-      default:
-        return;
-    }
-  }
+  render();
 }
 
 function fetchData() {
@@ -98,18 +86,21 @@ function fetchData() {
     });
 }
 
-function init() {
-  fetchData()
-    .then(function(resp) {
-      data = resp;
-      addGrid(60)
-        .then(function() {
-          addLabels();
-          addSpheresFromData(data, scene);
-        });
+function loadFont() {
+  return new Promise(function(resolve, reject) {
+    var loader = new THREE.FontLoader();
+    loader.load('https://codepen.io/colepacak/pen/VEKGjY.js', function(font) {
+      resolve(font);
     });
+  });
+}
 
-  render();
+function render() {
+  tooltipsLookAtCamera();
+  TWEEN.update();
+  controls.update();
+  requestAnimationFrame(render);
+  renderer.render(scene, camera);
 }
 
 function addGrid(length) {
@@ -216,159 +207,156 @@ function addSpheresFromData(data, scene) {
 }
 
 function addLabels() {
-  var loader = new THREE.FontLoader();
-  loader.load('fonts/helvetiker_regular.typeface.json', function(font) {
-    var axisLabelMaterial = new THREE.MeshBasicMaterial({
-      color: colorLabel,
-      transparent: true,
-      side: THREE.DoubleSide,
-      opacity: 0
-    });
-    var size = 5;
-
-    // Axis labels
-    // x-axis
-    var message = "   % Decrease\nStart to Bottom";
-    var shapes = font.generateShapes(message, size);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var xAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
-    xAxisLabel.name = 'x-axis-label';
-    xAxisLabel.position.x = 7;
-    xAxisLabel.position.y = -5;
-    xAxisLabel.position.z = 67;
-    xAxisLabel.rotation.x = -1 * Math.PI / 4
-    labels.add(xAxisLabel);
-
-    // y-axis
-    var message = "Length (Quarters)";
-    var shapes = font.generateShapes(message, size);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var yAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
-    yAxisLabel.name = 'y-axis-label';
-    yAxisLabel.position.x = -5;
-    yAxisLabel.position.y = 57;
-    yAxisLabel.position.z = 67;
-    yAxisLabel.rotation.y = Math.PI / 4;
-    yAxisLabel.rotation.z =  -1 * Math.PI / 2;
-    labels.add(yAxisLabel);
-
-    // z-axis
-    var message = "  % Increase\nBottom to End";
-    var shapes = font.generateShapes(message, size);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var zAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
-    zAxisLabel.name = 'z-axis-label';
-    zAxisLabel.position.x = 67;
-    zAxisLabel.position.y = -5;
-    zAxisLabel.position.z = 52;
-    zAxisLabel.rotation.order = 'YXZ';
-    zAxisLabel.rotation.x = -1 * Math.PI / 4;
-    zAxisLabel.rotation.y = Math.PI / 2;
-    labels.add(zAxisLabel);
-
-    // Ticks
-    var tickMaterial = new THREE.MeshBasicMaterial({
-      color: colorLabel,
-      transparent: true,
-      side: THREE.DoubleSide,
-      opacity: 0
-    });
-    // x-axis
-    var message = '50%';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = 28.5;
-    tick.position.y = -1;
-    tick.position.z = 63;
-    tick.rotation.x = -1 * Math.PI / 4;
-    tick.name = 'x-tick-50'
-    labels.add(tick);
-
-    // y-axis
-    var message = '0';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = -0.5;
-    tick.position.y = -1;
-    tick.position.z = 62;
-    tick.rotation.y = Math.PI / 4;
-    tick.name = 'y-tick-0';
-    labels.add(tick);
-
-    var message = '5';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = -0.5;
-    tick.position.y = 29.5;
-    tick.position.z = 62;
-    tick.rotation.y = Math.PI / 4;
-    tick.name = 'y-tick-5';
-    labels.add(tick);
-
-    var message = '10';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = -0.5;
-    tick.position.y = 59;
-    tick.position.z = 62.5;
-    tick.rotation.y = Math.PI / 4;
-    tick.name = 'y-tick-10';
-    labels.add(tick);
-
-    // z-axis
-    var message = '0%';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = 63;
-    tick.position.y = -1;
-    tick.position.z = 1.5;
-    tick.rotation.order = 'YXZ';
-    tick.rotation.x = -1 * Math.PI / 4;
-    tick.rotation.y = Math.PI / 2;
-    tick.name = 'z-tick-0'
-    labels.add(tick);
-
-    var message = '50%';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = 63;
-    tick.position.y = -1;
-    tick.position.z = 31;
-    tick.rotation.order = 'YXZ';
-    tick.rotation.x = -1 * Math.PI / 4;
-    tick.rotation.y = Math.PI / 2;
-    tick.name = 'z-tick-50'
-    labels.add(tick);
-
-    var message = '100%';
-    var shapes = font.generateShapes(message, 1.3);
-    var geometry = new THREE.ShapeBufferGeometry(shapes);
-    var tick = new THREE.Mesh(geometry, tickMaterial);
-    tick.position.x = 61;
-    tick.position.y = -1;
-    tick.position.z = 64;
-    tick.rotation.order = 'YXZ';
-    tick.rotation.x = -1 * Math.PI / 4;
-    tick.rotation.y = Math.PI / 4;
-    tick.name = 'x-z-tick-100'
-    labels.add(tick);
-
-    axisLabelMaterial
-
-    const tweenAxisLabels = new TWEEN.Tween(axisLabelMaterial)
-      .to({ opacity: 1 }, 500)
-      .start();
-
-    const tweenTicks = new TWEEN.Tween(tickMaterial)
-      .to({ opacity: 1 }, 500)
-      .start();
+  var axisLabelMaterial = new THREE.MeshBasicMaterial({
+    color: colorLabel,
+    transparent: true,
+    side: THREE.DoubleSide,
+    opacity: 0
   });
+  var size = 3;
+
+  // Axis labels
+  // x-axis
+  var message = "   % Decrease\nStart to Bottom";
+  var shapes = font.generateShapes(message, size);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var xAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
+  xAxisLabel.name = 'x-axis-label';
+  xAxisLabel.position.x = 16;
+  xAxisLabel.position.y = -5;
+  xAxisLabel.position.z = 67;
+  xAxisLabel.rotation.x = -1 * Math.PI / 4
+  labels.add(xAxisLabel);
+
+  // y-axis
+  var message = "Length (Quarters)";
+  var shapes = font.generateShapes(message, size);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var yAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
+  yAxisLabel.name = 'y-axis-label';
+  yAxisLabel.position.x = -5;
+  yAxisLabel.position.y = 45;
+  yAxisLabel.position.z = 67;
+  yAxisLabel.rotation.y = Math.PI / 4;
+  yAxisLabel.rotation.z =  -1 * Math.PI / 2;
+  labels.add(yAxisLabel);
+
+  // z-axis
+  var message = "  % Increase\nBottom to End";
+  var shapes = font.generateShapes(message, size);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var zAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
+  zAxisLabel.name = 'z-axis-label';
+  zAxisLabel.position.x = 67;
+  zAxisLabel.position.y = -5;
+  zAxisLabel.position.z = 42;
+  zAxisLabel.rotation.order = 'YXZ';
+  zAxisLabel.rotation.x = -1 * Math.PI / 4;
+  zAxisLabel.rotation.y = Math.PI / 2;
+  labels.add(zAxisLabel);
+
+  // Ticks
+  var tickMaterial = new THREE.MeshBasicMaterial({
+    color: colorLabel,
+    transparent: true,
+    side: THREE.DoubleSide,
+    opacity: 0
+  });
+  // x-axis
+  var message = '50%';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = 28.5;
+  tick.position.y = -1;
+  tick.position.z = 63;
+  tick.rotation.x = -1 * Math.PI / 4;
+  tick.name = 'x-tick-50'
+  labels.add(tick);
+
+  // y-axis
+  var message = '0';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = -0.5;
+  tick.position.y = -1;
+  tick.position.z = 62;
+  tick.rotation.y = Math.PI / 4;
+  tick.name = 'y-tick-0';
+  labels.add(tick);
+
+  var message = '5';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = -0.5;
+  tick.position.y = 29.5;
+  tick.position.z = 62;
+  tick.rotation.y = Math.PI / 4;
+  tick.name = 'y-tick-5';
+  labels.add(tick);
+
+  var message = '10';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = -0.5;
+  tick.position.y = 59;
+  tick.position.z = 62.5;
+  tick.rotation.y = Math.PI / 4;
+  tick.name = 'y-tick-10';
+  labels.add(tick);
+
+  // z-axis
+  var message = '0%';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = 63;
+  tick.position.y = -1;
+  tick.position.z = 1.5;
+  tick.rotation.order = 'YXZ';
+  tick.rotation.x = -1 * Math.PI / 4;
+  tick.rotation.y = Math.PI / 2;
+  tick.name = 'z-tick-0'
+  labels.add(tick);
+
+  var message = '50%';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = 63;
+  tick.position.y = -1;
+  tick.position.z = 31;
+  tick.rotation.order = 'YXZ';
+  tick.rotation.x = -1 * Math.PI / 4;
+  tick.rotation.y = Math.PI / 2;
+  tick.name = 'z-tick-50'
+  labels.add(tick);
+
+  var message = '100%';
+  var shapes = font.generateShapes(message, 1.3);
+  var geometry = new THREE.ShapeBufferGeometry(shapes);
+  var tick = new THREE.Mesh(geometry, tickMaterial);
+  tick.position.x = 61;
+  tick.position.y = -1;
+  tick.position.z = 64;
+  tick.rotation.order = 'YXZ';
+  tick.rotation.x = -1 * Math.PI / 4;
+  tick.rotation.y = Math.PI / 4;
+  tick.name = 'x-z-tick-100'
+  labels.add(tick);
+
+  axisLabelMaterial
+
+  const tweenAxisLabels = new TWEEN.Tween(axisLabelMaterial)
+    .to({ opacity: 1 }, 500)
+    .start();
+
+  const tweenTicks = new TWEEN.Tween(tickMaterial)
+    .to({ opacity: 1 }, 500)
+    .start();
 }
 
 function addTooltip(sphere) {
@@ -395,6 +383,7 @@ function addTooltip(sphere) {
   var foreground = new THREE.Mesh(geometry, material);
   // Offset the front plane so that the two don't blur together.
   foreground.position.add(new THREE.Vector3(0.01,0.01,0.01));
+  foreground.name = 'tooltip-foreground-' + sphere.name;
   tooltip.add(foreground);
 
   // Tether
@@ -406,29 +395,35 @@ function addTooltip(sphere) {
   );
 
   // Text and close button
-  var loader = new THREE.FontLoader();
-  loader.load('fonts/helvetiker_regular.typeface.json', function(font) {
-    var name = tooltip.name.replace(/tooltip-/, '');
-    var year = name.slice(0, 4);
-    var quarter = 'Q' + name.slice(-1);
-    var textShapes = font.generateShapes(year + ' ' + quarter, 2);
-    var textGeometry = new THREE.ShapeBufferGeometry(textShapes);
-    var textMaterial = new THREE.MeshBasicMaterial({ color: colorBg });
-    var text = new THREE.Mesh(textGeometry, textMaterial);
-    text.position.add(new THREE.Vector3(0.03,0.03,0.03));
-    text.position.sub(new THREE.Vector3(7,0.85,0));
-    tooltip.add(text);
+  var name = tooltip.name.replace(/tooltip-/, '');
+  var year = name.slice(0, 4);
+  var quarter = 'Q' + name.slice(-1);
+  var textShapes = font.generateShapes(year + ' ' + quarter, 2);
+  var textGeometry = new THREE.ShapeBufferGeometry(textShapes);
+  var textMaterial = new THREE.MeshBasicMaterial({ color: colorBg });
+  var text = new THREE.Mesh(textGeometry, textMaterial);
+  text.name = 'tooltip-text-' + sphere.name;
+  text.position.add(new THREE.Vector3(0.03,0.03,0.03));
+  text.position.sub(new THREE.Vector3(7,0.85,0));
+  tooltip.add(text);
 
-    var closeShapes = font.generateShapes('+', 3);
-    var closeGeometry = new THREE.ShapeBufferGeometry(closeShapes);
-    var closeMaterial = new THREE.MeshBasicMaterial({ color: 0xef5350 });
-    var close = new THREE.Mesh(closeGeometry, closeMaterial);
-    close.name = 'tooltip-close-' + sphere.name;
-    close.userData.type = 'tooltip-close';
-    close.position.add(new THREE.Vector3(7,-1.65,0.02));
-    close.rotation.z = Math.PI / 4;
-    tooltip.add(close);
-  });
+  // Close target
+  var closeTargetGeometry = new THREE.CircleGeometry(1.5, 32);
+  var closeTargetMaterial = new THREE.MeshBasicMaterial({ opacity: 0, transparent: true });
+  var closeTarget = new THREE.Mesh(closeTargetGeometry, closeTargetMaterial);
+  closeTarget.name = 'tooltip-close-' + sphere.name;
+  closeTarget.userData.type = 'tooltip-close';
+  closeTarget.position.add(new THREE.Vector3(7,0.02,0.02));
+  closeTarget.rotation.z = Math.PI / 4;
+  tooltip.add(closeTarget);
+  // Close icon
+  var closeIconShapes = font.generateShapes('+', 3);
+  var closeIconGeometry = new THREE.ShapeBufferGeometry(closeIconShapes);
+  var closeIconMaterial = new THREE.MeshBasicMaterial({ color: 0xef5350 });
+  var closeIcon = new THREE.Mesh(closeIconGeometry, closeIconMaterial);
+  closeIcon.name = 'tooltip-close-icon-' + sphere.name;
+  closeIcon.position.add(new THREE.Vector3(-1.2,-1.2,0.02));
+  closeTarget.add(closeIcon);
 
   activateDragControls();
 }
@@ -492,13 +487,42 @@ function tooltipsLookAtCamera() {
     .forEach(t => t.lookAt(camera.position.clone().multiply(new THREE.Vector3(0.7,0.8,0.7))));
 }
 
-init();
+document.addEventListener('click', handleDocumentClick);
+document.addEventListener('touchstart', handleDocumentClick);
 
-function render() {
-  tooltipsLookAtCamera();
-  TWEEN.update();
-  requestAnimationFrame(render);
-  controls.update();
-  renderer.render(scene, camera);
+function handleDocumentClick(e) {
+  mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y = - (e.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
+  if (e.type === 'touchstart') {
+    mouse.x = (e.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1;
+  	mouse.y = - (e.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1;
+  }
+
+  var closeButtons = scene.children
+    .filter(c => c.name.includes('tooltip'))
+    .map(t => {
+      return t.children.filter(c => {
+        return c.name.includes('tooltip-close');
+      })[0];
+    });
+
+  var tooltips = scene.children.filter(c => c.name.includes('tooltip'));
+
+  // Register all objects as targets to prevent unwanted click-throughs.
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(spheres.children.concat(closeButtons, tooltips));
+
+  if (intersects.length) {
+    switch(intersects[0].object.userData.type) {
+      case 'sphere':
+        addTooltip(intersects[0].object);
+        break;
+      case 'tooltip-close':
+        removeTooltip(intersects[0].object);
+        break;
+      default:
+        return;
+    }
+  }
 }

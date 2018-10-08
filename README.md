@@ -17,7 +17,10 @@
 * ~~consider different color for tether than grid.~~
 * ~~fix mismatch between values and axes.~~
 * ~~animate spheres~~
+* ~~decrease font size of axis labels~~
+* ~~camera look at centroid of scene bounding box~~
+* ~~bug: tooltips aren't displayed on mobile tap.~~
+* ~~increase click target of tooltip close.~~
 
-* add legend for sphere color/radius
-* increase click target of tooltip close.
+* figure out title and legend for sphere color/radius - drawer
 * cleanup: function order, browser test for es6 support.
