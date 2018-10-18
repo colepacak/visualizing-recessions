@@ -25,5 +25,5 @@
 * figure out title and legend for sphere color/radius - drawer
 * cleanup: function order, browser test for es6 support.
 
-<p data-height="265" data-theme-id="0" data-slug-hash="PyGBOo" data-default-tab="js,result" data-user="colepacak" data-pen-title="Visualizing Recessions with Pandas and Three.js" class="codepen">See the Pen <a href="https://codepen.io/colepacak/pen/PyGBOo/">Visualizing Recessions with Pandas and Three.js</a> by Cole Pacak (<a href="https://codepen.io/colepacak">@colepacak</a>) on <a href="https://codepen.io">CodePen</a>.</p>
-<script async src="https://static.codepen.io/assets/embed/ei.js"></script>
+<iframe height='265' scrolling='no' title='Visualizing Recessions with Pandas and Three.js' src='//codepen.io/colepacak/embed/PyGBOo/?height=265&theme-id=0&default-tab=js,result' frameborder='no' allowtransparency='true' allowfullscreen='true' style='width: 100%;'>See the Pen <a href='https://codepen.io/colepacak/pen/PyGBOo/'>Visualizing Recessions with Pandas and Three.js</a> by Cole Pacak (<a href='https://codepen.io/colepacak'>@colepacak</a>) on <a href='https://codepen.io'>CodePen</a>.
+</iframe>
