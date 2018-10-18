@@ -3,34 +3,27 @@
   <head>
     <meta charset="utf-8">
     <title>Visualizing Recessions with Pandas and Three.js</title>
-    <style>
-      body { margin: 0; }
-      canvas { width: 100%; height: 100%; }
-      .title-bar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 5px;
-        background: #ffffff;
-      }
-      h2 {
-        margin: 0;
-      }
-      p {
-        margin: 0;
-      }
-    </style>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,700">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
   </head>
   <body>
-    <!-- <div class="title-bar">
-      <h2>U.S. Recessions</h2>
-      <p>Legend goes here</p>
-    </div> -->
+    <div class="legend">
+      <i class="fas fa-bars legend-button"></i>
+      <h1 class="title">U.S. Recessions</h1>
+      <h2 class="subtitle">1947-2016</h2>
+      <h3>Number of consecutive quarterly declines in GDP from recession start:</h3>
+      <ul class="declines">
+        <li class="decline decline-blue">2</li>
+        <li class="decline decline-green">3</li>
+        <li class="decline decline-red">4</li>
+      </ul>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
     <script src="https://cdn.rawgit.com/mrdoob/three.js/r97/build/three.js"></script>
     <script src="https://cdn.rawgit.com/mrdoob/three.js/r97/examples/js/controls/DragControls.js"></script>
     <script src="https://cdn.rawgit.com/mrdoob/three.js/r97/examples/js/controls/OrbitControls.js"></script>
-    <script src="index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+    <script src="./js/dist/index.bundle.js"></script>
   </body>
 </html>
