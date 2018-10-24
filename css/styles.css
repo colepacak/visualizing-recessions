@@ -10,7 +10,7 @@ body {
   left: 0;
   width: 330px;
   height: 100vh;
-  padding: 10px 70px 10px 10px;
+  padding: 10px 70px 50px 10px;
   background: #e0e0e0;
   font-family: 'Roboto', arial, sans-serif;
   transform: translateX(-84%);
@@ -19,6 +19,7 @@ body {
 }
 .legend--open {
   transform: translateX(0%);
+  overflow: scroll;
 }
 .legend-button {
   position: absolute;
