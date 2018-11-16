@@ -124,12 +124,12 @@ def normalize_column(df, column, feature_range=(0,1)):
 
     return df.apply(lambda x: scaler.transform(x[column])[0][0], axis=1)
 
-recessions['num_quarters_norm'] = normalize_column(recessions, 'num_quarters', (1,10))
-recessions['start_to_bottom_norm'] = normalize_column(recessions, 'start_to_bottom', (1,10))
-recessions['bottom_to_end_norm'] = normalize_column(recessions, 'bottom_to_end', (1,10))
+recessions['num_quarters_norm'] = normalize_column(recessions, 'num_quarters', (0,100))
+recessions['start_to_bottom_norm'] = normalize_column(recessions, 'start_to_bottom', (0,100))
+recessions['bottom_to_end_norm'] = normalize_column(recessions, 'bottom_to_end', (0,100))
 recessions['num_initial_consecutive_decreases_norm'] = normalize_column(recessions, 'num_initial_consecutive_decreases', (1,5))
 
-print(recessions[['gdp', 'bottom_gdp', 'end_gdp', 'num_quarters', 'num_initial_consecutive_decreases', 'num_initial_consecutive_decreases_norm']])
+print(recessions[['quarter', 'bottom_to_end', 'bottom_to_end_norm']])
 
 # Export to JSON
 # recessions.to_json('recessions.json', orient='records')

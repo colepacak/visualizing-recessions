@@ -223,7 +223,7 @@ function addLabels() {
 
   // Axis labels
   // x-axis
-  var message = "   % Decrease\nStart to Bottom";
+  var message = "    % Decrease\n Start to Bottom\n(Scaled 0 to 100)";
   var shapes = font.generateShapes(message, size);
   var geometry = new THREE.ShapeBufferGeometry(shapes);
   var xAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
@@ -248,7 +248,7 @@ function addLabels() {
   labels.add(yAxisLabel);
 
   // z-axis
-  var message = "  % Increase\nBottom to End";
+  var message = "    % Increase\n  Bottom to End\n(Scaled 0 to 100)";
   var shapes = font.generateShapes(message, size);
   var geometry = new THREE.ShapeBufferGeometry(shapes);
   var zAxisLabel = new THREE.Mesh(geometry, axisLabelMaterial);
